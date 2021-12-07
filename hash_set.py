@@ -1,16 +1,15 @@
 # HashSet with separate chaining
 # Do not handle growing the HashSet when there are too much collision and saturation
-from bisect import bisect_left
 
 class HashSet:
     MOD = 2 ** 61 - 1
     SIZE = 10_000
     def __init__(self, size = SIZE ):
         self.size = size * 2
-        self.set = [None] * self.size
+        self.set = [ set() for _ in range(self.size)]
     def hash(self, data):
         if isinstance(data, str):
-            i = _transform(self, data) % self.MOD
+            i = self._transform(data) % self.MOD
         else:
             i = data % self.MOD
         return i % self.size
@@ -20,37 +19,16 @@ class HashSet:
 
     def add(self, data):
         i = self.hash(data)
-        chain = self.set[i]
-        if chain:
-            i_to_put = bisect_left(chain, data)
-            check_here = i_to_put*(i_to_put == len(chain)-1) + (i_to_put+1)*(i_to_put < len(chain)-1)
-            if chain[check_here] == data:
-                pass # You already exist!
-            else:
-                chain.insert(i_to_put, data)
-        else:
-            self.set[i] = [data]
+        self.set[i].add(data)
 
     def get(self, data):
         i = self.hash(data)
-        chain = self.set[i]
-        if not chain:
-            return False
-        pos = bisect_left(chain, data)
-        check_here = pos*(pos==len(chain)-1) + (pos+1)*(pos<len(chain)-1)
-        if not data == chain[check_here]:
-            return False
-        return True
+        return data in self.set[i]
 
     def remove(self, data):
         i = self.hash(data)
-        chain = self.set[i]
-        if not chain:
-            return
-        pos = bisect_left(chain, data)
-        check_here = pos*(pos==len(chain)-1) + (pos+1)*(pos<len(chain)-1)
-        if data == chain[check_here]:
-            del chain[pos+1]
+        if data in self.set[i]:
+            self.set[i].remove(data)
 
 def int_test():
     hs = HashSet()
@@ -68,6 +46,7 @@ def str_test():
     hs = HashSet()
     from itertools import permutations
     ss = list(permutations("ABCD"))
+    ss = [ "".join(t) for t in ss ]
     for s in ss:
         hs.add(s)
 
@@ -86,7 +65,7 @@ def small_size_test():
         assert hs.get(i) == True
     assert hs.get(-1) == False
 
-if __name__ == '_main__':
+if __name__ == '__main__':
     int_test()
     str_test()
     small_size_test()
